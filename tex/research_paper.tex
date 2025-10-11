@@ -85,7 +85,7 @@
 \dedicatory{}
 
 \begin{abstract}
-This project provides a quantitative analysis of chess blunders using a large Lichess dataset and Stockfish evaluations. We study how temporal factors, positional complexity, piece dynamics, and player skill influence blunder probability, and propose modeling approaches (multivariate analysis, matrix factorization, and neural networks) for prediction.
+This project provides a quantitative analysis of chess blunders using a large Lichess dataset and Stockfish evaluations. The research will study how temporal factors, positional complexity, piece dynamics, and player skill influence blunder probability, and propose modeling approaches (multivariate analysis, matrix factorization, and neural networks) for prediction.
 \end{abstract}
 
 \maketitle
@@ -93,7 +93,7 @@ This project provides a quantitative analysis of chess blunders using a large Li
 \section{Project Outline}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Description}
-This project aims to conduct a quantitative investigation into the nature of blunders in the game of chess. Leveraging the large-scale \href{https://database.lichess.org/}{Lichess open database} (casual games, $\approx90$ million games/month) and the \href{https://theweekinchess.com/twic}{TWIC Archive} (official international games, $\approx8100$ games/week), we will analyze a significant dataset of games to identify the conditions under which players are most likely to make critical errors.
+This project aims to conduct a quantitative investigation into the nature of blunders in the game of chess. Leveraging the large-scale \href{https://database.lichess.org/}{Lichess open database} (casual games, $\approx90$ million games/month) and the \href{https://theweekinchess.com/twic}{TWIC Archive} (official international games, $\approx8100$ games/week), the research will analyze a significant dataset of games to identify the conditions under which players are most likely to make critical errors.
 
 A "blunder" will be defined as a move that causes a substantial negative shift in the game's evaluation, as determined by the powerful Stockfish chess engine. The core of the investigation will be to correlate the occurrence of these blunders with a variety of contextual factors, including:
 
@@ -172,7 +172,7 @@ Lack of Clear Correlation & Data may not show strong correlations between variab
 
 \subsection{Problem Formulation}
 \begin{itemize}
-    \item Define blunders mathematically using Stockfish evaluation deltas (>150 centipawns).
+    \item Define blunders mathematically using Stockfish evaluation deltas ($>150$ centipawns).
     \item Formal representation of features:
     \begin{itemize}
         \item Position encoding as matrices/tensors.
