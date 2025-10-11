@@ -1,0 +1,24 @@
+# LaTeX output
+*.aux
+*.log
+*.out
+*.toc
+# Ignore build output directory
+build/
+
+# Keep PDFs in repo root if explicitly committed; do not ignore all PDFs by default
+# *.pdf
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# OS files
+.DS_Store
+
+# Editor
+.vscode/
+
+.direnv/
+.envrc

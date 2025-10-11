@@ -1,0 +1,131 @@
+%% filename: amsart-template.tex
+%% version: 1.1
+%% date: 2014/07/24
+%%
+%% American Mathematical Society
+%% Technical Support
+%% Publications Technical Group
+%% 201 Charles Street
+%% Providence, RI 02904
+%% USA
+%% tel: (401) 455-4080
+%%      (800) 321-4267 (USA and Canada only)
+%% fax: (401) 331-3842
+%% email: tech-support@ams.org
+%% 
+%% Copyright 2008-2010, 2014 American Mathematical Society.
+%% 
+%% This work may be distributed and/or modified under the
+%% conditions of the LaTeX Project Public License, either version 1.3c
+%% of this license or (at your option) any later version.
+%% The latest version of this license is in
+%%   http://www.latex-project.org/lppl.txt
+%% and version 1.3c or later is part of all distributions of LaTeX
+%% version 2005/12/01 or later.
+%% 
+%% This work has the LPPL maintenance status `maintained'.
+%% 
+%% The Current Maintainer of this work is the American Mathematical
+%% Society.
+%%
+%% ====================================================================
+
+%     AMS-LaTeX v.2 template for use with amsart
+%
+%     Remove any commented or uncommented macros you do not use.
+
+\documentclass{amsart}
+\usepackage{enumitem} % added to allow custom enumerate labels
+%% \usepackage{microtype} % improves justification and typography
+\usepackage[margin=1in]{geometry} % modest margins for better output layout
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref} % clickable links and PDF metadata
+\hypersetup{
+  pdftitle={Chess Blunder Analysis Using Multivariate and Linear Algebraic Approaches},
+  pdfauthor={Vandit Goel},
+  pdfkeywords={chess, blunder, Stockfish, machine learning, multivariate analysis}
+}
+\setlist[enumerate]{label=\arabic*., leftmargin=*, itemsep=4pt} % global numeric "1." style
+
+% increase paragraph vertical spacing (adjust the 8pt value as needed)
+\setlength{\parskip}{8pt plus 2pt minus 1pt}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{xca}[theorem]{Exercise}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\numberwithin{equation}{section}
+
+\begin{document}
+
+\title{Chess Blunder Analysis Using Multivariate and Linear Algebraic Approaches}
+
+%    Remove any unused author tags.
+%    author one information
+\author{Vandit Goel}
+\address{University of Texas at Arlington, 701 S. Nedderman Dr., Arlington, TX 76019}
+\curraddr{}
+\email{vxg5699@mavs.uta.edu}
+\thanks{}
+
+% TODO: add MSC codes
+\subjclass[2010]{Primary }
+
+\keywords{chess, blunder, Stockfish, machine learning, multivariate analysis}
+
+\date{October 10, 2025}
+
+\dedicatory{}
+
+\begin{abstract}
+This project provides a quantitative analysis of chess blunders using a large Lichess dataset and Stockfish evaluations. We study how temporal factors, positional complexity, piece dynamics, and player skill influence blunder probability, and propose modeling approaches (multivariate analysis, matrix factorization, and neural networks) for prediction.
+\end{abstract}
+
+\maketitle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Description}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+This project aims to conduct a quantitative investigation into the nature of blunders in the game of chess. Leveraging the large-scale \href{https://database.lichess.org/}{Lichess open database} (casual games, $\approx90$ million games/month) and the \href{https://theweekinchess.com/twic}{TWIC Archive} (official international games, $\approx8100$ games/week), we will analyze a significant dataset of games to identify the conditions under which players are most likely to make critical errors.
+
+A "blunder" will be defined as a move that causes a substantial negative shift in the game's evaluation, as determined by the powerful Stockfish chess engine. The core of the investigation will be to correlate the occurrence of these blunders with a variety of contextual factors, including:
+
+\begin{enumerate}
+    \item \textbf{Temporal Factors:} The amount of time remaining on a player's clock and the time spent on the move in question.
+    \item \textbf{Positional Complexity:} The "sharpness" or tactical complexity of the board state. This can be quantified by analyzing the win/draw/loss (WDL) probabilities provided by modern engines like Stockfish.
+    \item \textbf{Piece Dynamics:} The type of piece being moved (e.g., are blunders more common with knights than with rooks?).
+    \item \textbf{Player Skill Level:} How blunder frequency and type differ across various player rating brackets.
+\end{enumerate}
+
+The ultimate goal is to move beyond simple blunder identification and develop a model that captures the interplay between these variables. The final phase of the project will involve an attempt to create a predictive neural network model that estimates the probability of a blunder occurring in a given position and context.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Topic Fit}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The project integrates several core mathematical topics from the course:
+
+\begin{itemize}
+    \item \textbf{Linear Algebra:} Board encodings, matrix factorizations (e.g., PCA, SVD) for feature reduction.
+    \item \textbf{Probability and Statistics:} Modeling uncertainty in decision-making and empirical error distributions.
+    \item \textbf{Graph Theory:} Representing chess positions as state-transition graphs.
+    \item \textbf{Numerical Analysis:} Optimization and error minimization during model training.
+    \item \textbf{Machine Learning:} Applying regression and neural models as practical extensions of linear methods.
+\end{itemize}
+
+
+% bibliography (BibTeX)
+{
+    \small
+    \bibliographystyle{plain}
+    \bibliography{references}
+    \nocite{*}
+}
+
+%-----------------------------------------------------------------------
+% End of amsart-template.tex
+%-----------------------------------------------------------------------
+\end{document}
