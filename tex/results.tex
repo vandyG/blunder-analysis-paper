@@ -1,0 +1,69 @@
+% Results section for Chess Blunder Analysis
+\section{Results}\label{sec:results}
+
+This section presents empirical findings from the processed Lichess sample. Unless stated otherwise, an ``error'' denotes any move classified as Inaccuracy, Mistake, or Blunder via the winning chance delta thresholds (Section~\ref{sec:problem_formulation}).
+
+\subsection{Error Rates Across Elo and Time Controls}
+Error prevalence generally declines with increasing Elo across time controls (Figures~\ref{fig:elo-blitz}--\ref{fig:elo-standard}), but the pattern of decline depends strongly on rating strata and time control. The steepest slope of decline occurs among the very highest-rated players (Elo $>2600$), who show marked reductions in error rates relative to slightly lower tiers. Longer time formats (Rapid and Standard) exhibit a larger decline in errors across Elo than Bullet; Bullet still shows a noticeable improvement for the top ($>2600$) players but the gradient is less pronounced than in longer formats.
+
+Key observations:
+\begin{itemize}
+  \item \textbf{Bullet (Figure~\ref{fig:elo-bullet})}: Error proportions are elevated at lower Elo and improve with rating, suggesting pattern recognition and practical skills partially compensate for extreme time pressure.
+  \item \textbf{Blitz (Figure~\ref{fig:elo-blitz})}: Shows a sharper decline across Elo than Bullet for higher rating bands, reflecting that modestly longer decision time reduces time-induced noise.
+  \item \textbf{Rapid (Figure~\ref{fig:elo-rapid})}: Transitional regime; error rates fall more substantially with Elo than in Bullet/Blitz with higher-rated players.
+  \item \textbf{Standard (Figure~\ref{fig:elo-standard})}: Distinct profile: higher-rated players (Elo >2400) make significantly fewer errors, while lower-rated players continue to exhibit relatively high error rates, producing a more bimodal-like relationship between Elo and error prevalence.
+\end{itemize}
+
+\subsection{Piece-Type Error Distribution}
+Figure~\ref{fig:piece-error} reports error composition by moved piece. Knights and Queens show relatively higher severe error proportions compared to Pawns. Hypotheses:
+\begin{itemize}
+  \item \textbf{Knights}: High branching tactical motifs; miscalculation of knight forks and intermediate squares leads to larger evaluation drops.
+  \item \textbf{Queens}: Centralization and overextension errors produce large tactical liabilities when tempo is misjudged.
+  \item \textbf{Pawns}: Majority of pawn moves produce incremental positional shifts, hence lower severe error proportion; inaccuracies dominate rather than blunders.
+  \item \textbf{Rooks/Bishops}: Intermediate; their long-range nature creates both strategic and tactical opportunities but fewer catastrophic single-move losses than queen blunders.
+\end{itemize}
+
+\subsection{Interpretive Summary}
+Across temporal regimes, cognitive/time resource compression elevates both frequency and severity of errors. The steeper error gradient in faster controls suggests that time scarcity interacts multiplicatively with positional complexity. Piece-type analysis reinforces that tactical density (knights) and high-value tempo (queens) amplify blunder risk. Collectively, these findings motivate modeling approaches incorporating (i) dynamic time-pressure features (e.g., remaining clock normalized by increment and move phase), (ii) local tactical complexity proxies (sharpness, contempt variants), and (iii) piece-specific interaction terms.
+
+Future work will regress blunder probability against a joint feature set including sharpness metrics and temporal ratios to quantify marginal contributions and interaction effects.
+
+% ---------------- Figures ----------------
+% 2x2 grid for Elo/time-control plots (Bullet, Blitz, Rapid, Standard).
+\begin{figure}[ht]
+  \centering
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{../data/images/error_vs_elo_bullet.png}
+    \caption{Bullet}\label{fig:elo-bullet}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{../data/images/error_vs_elo_blitz.png}
+    \caption{Blitz}\label{fig:elo-blitz}
+  \end{subfigure}
+
+  \vspace{6pt}
+
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{../data/images/error_vs_elo_rapid.png}
+    \caption{Rapid}\label{fig:elo-rapid}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{../data/images/errors_vs_elo_standard.png}
+    \caption{Standard}\label{fig:elo-standard}
+  \end{subfigure}
+
+  \caption{Elo-binned error proportions by time control: Bullet, Blitz, Rapid, and Standard.}
+  \label{fig:elo-grid}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.68\textwidth]{../data/images/error_vs_piece.png}
+  \caption{Error composition by moved piece type.}\label{fig:piece-error}
+\end{figure}

@@ -1,0 +1,44 @@
+% problem_formulation.tex
+% Stand-alone section describing the error taxonomy used in the project.
+
+\section{Problem Formulation}\label{sec:problem_formulation}
+Stockfish reports position quality in \emph{centipawns} (cp), where $100$ cp equals a single pawn advantage for the side to move. Traditional search-based evaluations treated this value as a near-linear proxy for material; however, modern NNUE-guided assessments correlate the normalized cp score with the probability of winning the game. A one-pawn lead corresponds to roughly a $50\%$ win probability, while $0$ cp implies equal winning chances but an almost forced draw between evenly matched engines. These semantics follow the Stockfish FAQ guidance \cite{stockfishFAQ}.
+
+When the UCI option \texttt{UCI\_ShowWDL} is enabled, Stockfish additionally outputs \emph{win/draw/loss} (WDL) probabilities $\bigl(P_t^{\mathrm{win}}, P_t^{\mathrm{draw}}, P_t^{\mathrm{loss}}\bigr)$, which satisfy $P_t^{\mathrm{win}} + P_t^{\mathrm{draw}} + P_t^{\mathrm{loss}} = 1$ and summarize the expected match score. These probabilities come from a model fitted on Fishtest self-play data (Stockfish vs.	{}Stockfish at $60{+}0.6$), so equal-strength opponents yield the published curves, while practical WDL values still depend on opponent strength and time control (draw rates drop in bullet, weaker opposition converts negative cp scores into wins more often). The curves continue to evolve as engines improve, trending toward a $100\%$ draw expectation at $0$ cp \cite{stockfishWDL}.
+
+With these definitions in place, we analyze every move through the lens of cp evaluations and convert those evaluations into an empirical winning chance. Let $c_t$ denote the Stockfish score after move $t$ (positive for the side to move). Following the Lichess implementation \cite{lichessPR11148}, we map $c_t$ to a normalized winning chance
+\begin{equation}
+  W(c_t) = \frac{2}{1 + \exp(\alpha c_t)} - 1, \qquad \alpha = -0.00368208.
+  \label{eq:winning_chance}
+\end{equation}
+The same transformation can be reported as a percentage that is easier to interpret by human players:
+\begin{equation}
+  \mathrm{Win\%}(c_t) = 50 + 50 \cdot W(c_t) = 50 + 50 \left(\frac{2}{1 + \exp(\alpha c_t)} - 1\right).
+  \label{eq:win_percent}
+\end{equation}
+
+\subsection{Winning-Chance Delta}
+Let $\Delta c_t$ denote the change induced by the move ($\Delta c_t = c_t - c_{t-1}$). We evaluate the impact of a move via the absolute difference between consecutive winning chances:
+\begin{equation}
+  \Delta W_t = \left| W(c_t) - W(c_{t-1}) \right| = \left| \frac{2}{1 + \exp(\alpha c_t)} - \frac{2}{1 + \exp\big(\alpha (c_t - \Delta c_t)\big)} \right|.
+  \label{eq:delta_winning_chance}
+\end{equation}
+The absolute value treats equally sized swings in either direction while keeping the sign information available through $\Delta c_t$ if further stratification is needed \cite{lichessJudgement1,lichessJudgement2}.
+
+\subsection{Error Taxonomy}
+Moves are categorized solely by the magnitude of $\Delta W_t$. Define thresholds
+\begin{equation*}
+  \tau_B = 0.30, \qquad \tau_M = 0.20, \qquad \tau_I = 0.10,
+\end{equation*}
+ordered so that $\tau_B > \tau_M > \tau_I$. The judgement assigned to move $t$ is
+\begin{equation}
+  \mathrm{Judgement}_t =
+  \begin{cases}
+    \text{Blunder}, & \Delta W_t \geq \tau_B, \\
+    \text{Mistake}, & \tau_M \leq \Delta W_t < \tau_B, \\
+    \text{Inaccuracy}, & \tau_I \leq \Delta W_t < \tau_M, \\
+    \text{None}, & \Delta W_t < \tau_I.
+  \end{cases}
+  \label{eq:judgement}
+\end{equation}
+No additional modeling assumptions are required at this stage; the labels arise purely from the calibrated winning-chance deltas. Because the new slope $\alpha$ was tuned to align with human outcomes, we retain the existing accuracy formula for downstream evaluation metrics.

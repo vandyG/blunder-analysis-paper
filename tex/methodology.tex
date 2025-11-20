@@ -1,0 +1,52 @@
+\section{Methodology}
+\subsection{Data Extraction from Lichess PGN Datasets}
+The Lichess PGN archives were converted into an analysis-ready dataset via a two-stage extraction pipeline that prioritizes sequential I/O efficiency and parallelism. In the first stage the corpus is scanned in a single pass to record the byte offsets of individual games; these offsets permit deterministic, non-overlapping assignment of disjoint batches to worker processes so that each portion of the file is read exactly once. In the second stage multiple workers read games by offset, parse headers and move lists into structured records, and extract game-level metadata (for example, time control, termination mode, and Elo ratings). For each ply we collect engine-derived evaluations (centipawn values, win/draw/loss probabilities, and mate distances) through a controlled evaluation interface.
+
+Per-move records are written to a columnar store (Parquet) with a fixed schema so that each row corresponds to a single move event and columns encode numerical and categorical descriptors. This storage choice supports linear-time streaming aggregation and efficient matrix-style batch loading for downstream statistical and machine-learning pipelines. The pipeline design enforces reproducibility (via deterministic offset partitioning), minimizes redundant I/O (single-pass discovery plus parallel readers), and maintains a clear, auditable mapping from raw PGN to analytic features suitable for vectorized analysis.
+
+\subsection{Feature Engineering Using Evaluation Data and Time Metrics}
+Let \(x_t \in \mathbb{R}^d\) denote the feature vector extracted for move \(t\). Each per-move record produced by the extractor contains a set of raw fields together with a small number of derived quantities; these form the building blocks for downstream matrices and models. Below we list the record fields, their interpretation, and the calculations used to produce derived features.
+
+\begin{itemize}
+    \item \textbf{Identifiers and provenance:} the fields \texttt{game\_id}, \texttt{offset}, and \texttt{site} uniquely identify the game and the byte position within the original archive. These fields enable reproducible joins and deterministic partitioning of the corpus.
+
+    \item \textbf{Player ratings:} the player's Elo values are recorded as integer fields for White and Black. The reported rating changes are stored separately. A simple derived scalar is the rating differential
+        \[\Delta\mathrm{Elo} = \texttt{white\_elo} - \texttt{black\_elo}.\]
+
+    \item \textbf{Opening and game descriptors:} \texttt{eco} is the ECO opening code; \texttt{time\_control}, \texttt{game\_time}, and \texttt{increment} encode the time-control category and parameters. The categorical time-control is used to group and standardize temporal features.
+
+    \item \textbf{Game outcome and termination:} \texttt{result} is encoded as +1 (White win), 0 (draw), and -1 (Black win). \texttt{termination} records the termination mode (resignation, mate, timeout, etc.) as a categorical string.
+
+    \item \textbf{Move context:} \texttt{turn} (which side moves), \texttt{move} (SAN move string), and \texttt{fullmove\_number} give the ply context required for sequential analyses.
+
+    \item \textbf{Engine-based evaluations:}
+        \begin{itemize}
+            \item \texttt{cp\_score}: a centipawn-style score (White-perspective). Mate scores are converted to large numeric sentinels so the field remains numeric for vectorized pipelines.
+            \item \texttt{winning\_chance}, \texttt{drawing\_chance}, \texttt{losing\_chance}: probability estimates derived from the engine's WDL output (in \([0,1]\)).
+            \item \texttt{mate\_in}: mate distance when applicable; otherwise set to $+\infty$.
+        \end{itemize}
+
+    \item \textbf{Board and tactical context:} \texttt{piece\_moved} is the moved piece type (categorical), \texttt{board\_fen} is the FEN of the position after the ply, and \texttt{is\_check} is a Boolean indicating whether the side to move is in check.
+
+    \item \textbf{Temporal information:} \texttt{clock} records the player's remaining time (seconds) at the moment of the move when available; missing clocks are encoded as null. In addition to raw clocks we compute a normalized \emph{time\_ratio} feature: for each move we look at the previous clock value (including increment) and measure the fraction of available thinking time consumed by the current move, 
+    $$\text{time\_ratio}_t = \frac{(\text{clock}_{t-1} + \text{increment}) - \text{clock}_t}{\text{clock}_{t-1} + \text{increment}},$$
+    with null ratios set to zero. This ratio absorbs both the base time and increment structure, yielding a comparable scale across formats.
+
+    \item \textbf{Local evaluation change:} the primary short-term derived measure is the per-ply evaluation change
+        \[\Delta\mathrm{eval}_t = \texttt{cp\_score}_t - \texttt{cp\_score}_{t-1},\]
+        computed as the difference between the engine score after the current ply and the engine score before the same ply. Positive values indicate an advantage shift for White; negative values indicate deterioration. When the previous score is unavailable (e.g., initial position), the change is computed with respect to the starting-position score.
+\end{itemize}
+
+From the raw and derived fields we construct analysis-ready features. Typical choices used in this work include:
+
+\begin{itemize}
+    \item Intercept: a constant 1 to absorb baseline effects in linear models.
+    \item Evaluation features: \texttt{cp\_score} and \(\Delta\mathrm{eval}_t\), optionally winsorized to limit the influence of mate sentinels.
+    \item Probabilistic features: \texttt{winning\_chance}, \texttt{drawing\_chance}, and \texttt{losing\_chance} (optionally transformed via log-odds for linear models).
+    \item Mate indicators: binary indicator $\mathbf{1}[\texttt{mate\_in} < \infty]$ and the mate distance when present.
+    \item Temporal features: standardized remaining clock (within-game z-score), the normalized time-ratio described above, and an indicator or ordinal encoding of time-control category.
+    \item Categorical encodings: one-hot or embedding encodings of \texttt{piece\_moved}, \texttt{eco}, and \texttt{termination}.
+    \item Rating-based controls: the rating differential $\Delta\mathrm{Elo}$ and raw player ratings.
+\end{itemize}
+
+These raw and derived features are persisted in columnar form so that the final design matrix $X \in \mathbb{R}^{n \times d}$ (with rows ordered by move-event) can be loaded without further parsing. Standard preprocessing used in our experiments comprises within-game standardization of time features, robust scaling of centipawn values, and categorical encoding for non-numeric fields. This construction yields feature sets suitable for least-squares regression, principal component analysis, and classification models, while keeping clear provenance from the original per-move records to the numeric arrays used in the mathematical analyses.

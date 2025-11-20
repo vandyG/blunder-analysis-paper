@@ -39,8 +39,6 @@
 \usepackage{color} % kept minimal; xcolor not needed for the table
 \usepackage{microtype} % improves justification and typography
 \usepackage[margin=1in]{geometry} % modest margins for better output layout
-\usepackage{graphicx} % needed for including result figures
-\usepackage{subcaption}
 \usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref} % clickable links and PDF metadata
 \hypersetup{
   pdftitle={Chess Blunder Analysis Using Multivariate and Linear Algebraic Approaches},
@@ -94,7 +92,7 @@ This project provides a quantitative analysis of chess blunders using a large Li
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Project Outline}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Introduction}
+\subsection{Description}
 This project aims to conduct a quantitative investigation into the nature of blunders in the game of chess. Leveraging the large-scale \href{https://database.lichess.org/}{Lichess open database} (casual games, $\approx90$ million games/month) and the \href{https://theweekinchess.com/twic}{TWIC Archive} (official international games, $\approx8100$ games/week), the research will analyze a significant dataset of games to identify the conditions under which players are most likely to make critical errors.
 
 A "blunder" will be defined as a move that causes a substantial negative shift in the game's evaluation, as determined by the powerful Stockfish chess engine. The core of the investigation will be to correlate the occurrence of these blunders with a variety of contextual factors, including:
@@ -108,9 +106,56 @@ A "blunder" will be defined as a move that causes a substantial negative shift i
 
 The ultimate goal is to move beyond simple blunder identification and develop a model that captures the interplay between these variables. The final phase of the project will involve an attempt to create a predictive neural network model that estimates the probability of a blunder occurring in a given position and context.
 
-\input{problem_formulation}
-\input{methodology}
-\input{results}
+\subsection{Topic Fit}
+The project integrates several core mathematical topics from the course:
+
+\begin{itemize}
+    \item \textbf{Linear Algebra:} Board encodings, matrix factorizations (e.g., PCA, SVD) for feature reduction.
+    \item \textbf{Probability and Statistics:} Modeling uncertainty in decision-making and empirical error distributions.
+    \item \textbf{Graph Theory:} Representing chess positions as state-transition graphs.
+    \item \textbf{Numerical Analysis:} Optimization and error minimization during model training.
+    \item \textbf{Machine Learning:} Applying regression and neural models as practical extensions of linear methods.
+\end{itemize}
+
+\subsection{Minimum Success Criteria}
+A minimum successful outcome for this project would be the completion of a thorough descriptive analysis. This includes:
+
+\begin{enumerate}
+    \item Successfully downloading, parsing, and processing a substantial subset of the Lichess database (e.g., 1 million games).
+    \item Analyzing these games with Stockfish to generate evaluation data for each move.
+    \item Producing a detailed statistical report with visualizations that clearly shows the relationships between blunder frequency and the key factors (time pressure, player rating, game phase, etc.).
+    \item A well-written final paper detailing the process and findings, even without a predictive model.
+\end{enumerate}
+
+\subsection{Stretch Goals}
+If the minimum outcome is achieved with time to spare, the project will proceed to:
+\begin{itemize}
+    \item Extend the analysis to include neural network-based blunder prediction.
+    \item Explore position-type clustering and visualization using dimensionality reduction.
+    \item Compare models across player Elo ranges to study performance variance.
+\end{itemize}
+
+\subsection{Risk Mitigation}
+The following table outlines potential risks and mitigation strategies:
+\begin{table}[htbp]
+\centering
+% increase row height and set visible border thickness
+\renewcommand{\arraystretch}{1.15}
+\setlength{\arrayrulewidth}{0.5pt}
+\begin{tabular}{|p{0.20\linewidth}|p{0.45\linewidth}|p{0.10\linewidth}|p{0.25\linewidth}|}
+\hline
+\textbf{Risk} & \textbf{Description} & \textbf{Impact} & \textbf{Mitigation Strategy} \\
+\hline
+Data Acquisition/Processing & The Lichess database is massive. Downloading and processing it could be slow and computationally expensive. PGN parsing can be complex. & High & Scope modification: start with a smaller subset (e.g., rapid games or a rating bracket). Use established libraries for PGN parsing. \\
+\hline
+Engine Analysis Time & Analyzing millions of moves with Stockfish can take days or weeks. & High & Reduce number of games, analyze only critical positions, or lower analysis depth. \\
+\hline
+Complexity of Predictive Model & Training a neural network can be time-consuming and complex. & Medium & Pivot to simpler models (logistic regression, XGBoost) if needed and focus on feature engineering. \\
+\hline
+Lack of Clear Correlation & Data may not show strong correlations between variables and blunder frequency. & Low & Treat the null result as informative; explore other factors or focus on interpretation. \\
+\hline
+\end{tabular}
+\end{table}
 
 % bibliography (BibTeX)
 {
@@ -119,44 +164,45 @@ The ultimate goal is to move beyond simple blunder identification and develop a 
     \nocite{*}
 }
 
+\section{Final Paper Outline}
+\textbf{Note:} The Title, Abstract, Description/Introduction and References sections are already written above and do not need to be repeated here.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% \subsection{Problem Formulation}
-% \begin{itemize}
-%     \item Define blunders mathematically using Stockfish evaluation deltas ($>150$ centipawns).
-%     \item Formal representation of features:
-%     \begin{itemize}
-%         \item Position encoding as matrices/tensors.
-%         \item Time and sharpness metrics.
-%         \item Response variable: blunder occurrence probability.
-%     \end{itemize}
-%     \item Notation and model assumptions.
-% \end{itemize}
-
-% \subsection{Methodology}
-% \begin{itemize}
-%     \item Data extraction from Lichess PGN datasets.
-%     \item Feature engineering using evaluation data and time metrics.
-%     \item Dimensionality reduction using PCA/SVD.
-%     \item Predictive modeling: regression and neural networks.
-%     \item Visualization of clusters using kernel-based similarity metrics.
-% \end{itemize}
-
-% \subsection{Results}
-% \begin{itemize}
-%     \item Empirical findings: correlation between time pressure and blunders.
-%     \item PCA projections showing dominant blunder factors.
-%     \item Predictive model accuracy and visualization of feature importance.
-% \end{itemize}
-
-% \subsection{Conclusion}
-% \begin{itemize}
-%     \item Key insights learned about player performance and cognitive limits.
-%     \item Discussion of open questions and extensions (e.g., player profiling, Elo-conditioned modeling).
-% \end{itemize}
+\textbf{Note:} Using subsections here but will be complete sections in the final paper.
 
 
+\subsection{Problem Formulation}
+\begin{itemize}
+    \item Define blunders mathematically using Stockfish evaluation deltas ($>150$ centipawns).
+    \item Formal representation of features:
+    \begin{itemize}
+        \item Position encoding as matrices/tensors.
+        \item Time and sharpness metrics.
+        \item Response variable: blunder occurrence probability.
+    \end{itemize}
+    \item Notation and model assumptions.
+\end{itemize}
+
+\subsection{Methodology}
+\begin{itemize}
+    \item Data extraction from Lichess PGN datasets.
+    \item Feature engineering using evaluation data and time metrics.
+    \item Dimensionality reduction using PCA/SVD.
+    \item Predictive modeling: regression and neural networks.
+    \item Visualization of clusters using kernel-based similarity metrics.
+\end{itemize}
+
+\subsection{Results}
+\begin{itemize}
+    \item Empirical findings: correlation between time pressure and blunders.
+    \item PCA projections showing dominant blunder factors.
+    \item Predictive model accuracy and visualization of feature importance.
+\end{itemize}
+
+\subsection{Conclusion}
+\begin{itemize}
+    \item Key insights learned about player performance and cognitive limits.
+    \item Discussion of open questions and extensions (e.g., player profiling, Elo-conditioned modeling).
+\end{itemize}
 
 %-----------------------------------------------------------------------
 % End of amsart-template.tex
