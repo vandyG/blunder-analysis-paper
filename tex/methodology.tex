@@ -24,6 +24,7 @@ Let \(x_t \in \mathbb{R}^d\) denote the feature vector extracted for move \(t\).
             \item \texttt{cp\_score}: a centipawn-style score (White-perspective). Mate scores are converted to large numeric sentinels so the field remains numeric for vectorized pipelines.
             \item \texttt{winning\_chance}, \texttt{drawing\_chance}, \texttt{losing\_chance}: probability estimates derived from the engine's WDL output (in \([0,1]\)).
             \item \texttt{mate\_in}: mate distance when applicable; otherwise set to $+\infty$.
+            \item \texttt{sharpness}: a scalar derived from WDL probabilities that quantifies how easy the position is to ``mess up'' for either player, defined as $S_t = P_t^{\mathrm{win}} + P_t^{\mathrm{loss}}$ as in Section~\ref{sec:problem_formulation}.
         \end{itemize}
 
     \item \textbf{Board and tactical context:} \texttt{piece\_moved} is the moved piece type (categorical), \texttt{board\_fen} is the FEN of the position after the ply, and \texttt{is\_check} is a Boolean indicating whether the side to move is in check.
@@ -42,7 +43,7 @@ From the raw and derived fields we construct analysis-ready features. Typical ch
 \begin{itemize}
     \item Intercept: a constant 1 to absorb baseline effects in linear models.
     \item Evaluation features: \texttt{cp\_score} and \(\Delta\mathrm{eval}_t\), optionally winsorized to limit the influence of mate sentinels.
-    \item Probabilistic features: \texttt{winning\_chance}, \texttt{drawing\_chance}, and \texttt{losing\_chance} (optionally transformed via log-odds for linear models).
+    \item Probabilistic features: \texttt{winning\_chance}, \texttt{drawing\_chance}, and \texttt{losing\_chance} (optionally transformed via log-odds for linear models), together with the sharpness score $S_t = P_t^{\mathrm{win}} + P_t^{\mathrm{loss}}$.
     \item Mate indicators: binary indicator $\mathbf{1}[\texttt{mate\_in} < \infty]$ and the mate distance when present.
     \item Temporal features: standardized remaining clock (within-game z-score), the normalized time-ratio described above, and an indicator or ordinal encoding of time-control category.
     \item Categorical encodings: one-hot or embedding encodings of \texttt{piece\_moved}, \texttt{eco}, and \texttt{termination}.

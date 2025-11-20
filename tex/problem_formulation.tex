@@ -25,6 +25,33 @@ Let $\Delta c_t$ denote the change induced by the move ($\Delta c_t = c_t - c_{t
 \end{equation}
 The absolute value treats equally sized swings in either direction while keeping the sign information available through $\Delta c_t$ if further stratification is needed \cite{lichessJudgement1,lichessJudgement2}.
 
+
+\subsection{Position Sharpness}
+Two positions can be equal from the engine's point of view while having very different practical difficulty. In one equal position no side has meaningful winning chances and both players are expected to hold a draw with accurate play; in another, both sides may have realistic paths to victory and small inaccuracies can immediately tip the result. To quantify how easy a position is to ``mess up'' for either player, we define a \emph{sharpness} score based on the WDL probabilities.
+
+Given WDL probabilities $\bigl(P_t^{\mathrm{win}}, P_t^{\mathrm{draw}}, P_t^{\mathrm{loss}}\bigr)$ for the side to move, the sharpness of move $t$ is defined as
+\begin{equation}
+  S_t = P_t^{\mathrm{win}} + P_t^{\mathrm{loss}}.
+  \label{eq:sharpness}
+\end{equation}
+Sharp positions are those in which either player can still win, so $S_t$ increases as the model assigns more probability mass to decisive outcomes and decreases when the draw probability dominates. By construction $0 \leq S_t \leq 1$, with $S_t \approx 0$ in dead-equal endgames and $S_t \approx 1$ when one side is overwhelmingly winning or losing.
+
+Several alternative sharpness functionals were explored before settling on the simple sum in~\eqref{eq:sharpness}. These alternatives attempted to downweight highly decisive positions (where one of $P_t^{\mathrm{win}}$ or $P_t^{\mathrm{loss}}$ is close to $1$) and to emphasize genuinely balanced but tactically sharp states (where both are moderately large). Concretely, we considered the following families, writing $w_t = P_t^{\mathrm{win}}$ and $\ell_t = P_t^{\mathrm{loss}}$ for brevity and introducing a small numerical constant $\varepsilon > 0$ to avoid division by zero and undefined logarithms:
+\begin{align}
+  S_t^{(1)} &= \left( \frac{2}{\log(w_t + \varepsilon) + \log(\ell_t + \varepsilon)} \right)^2, \\
+  S_t^{(2)} &= \frac{4 w_t \ell_t}{w_t + \ell_t + \varepsilon}, \\
+  S_t^{(3)} &= (w_t + \ell_t) \cdot H\bigl(\tilde w_t, \tilde \ell_t\bigr),
+\end{align}
+where
+\begin{equation*}
+  	\tilde w_t = \frac{w_t}{w_t + \ell_t + \varepsilon}, \qquad
+  	\tilde \ell_t = \frac{\ell_t}{w_t + \ell_t + \varepsilon},
+\end{equation*} 
+and $H(p,q) = -\bigl(p \log p + q \log q\bigr)$ denotes the binary entropy.
+
+In principle these refinements distinguish between positions where both sides have comparable winning chances (near $0.5$) and those where only one side can reasonably hope to win, assigning the highest scores to states with $w_t \approx \ell_t \approx 0.5$ and penalizing positions where one of them is close to $0$ or $1$.
+
+In practice, however, the sample we analyze contains almost no positions where $w_t$ and $\ell_t$ are simultaneously close to $0.5$, so the more elaborate constructions offered little empirical benefit and added unnecessary complexity. Moreover, they were numerically fragile in the regimes that actually occur in our data: when either $w_t$ or $\ell_t$ is very close to $0$ or $1$, the underlying expressions suffer from division-by-zero and undefined logarithms, and the required clipping with $\varepsilon$ can drive the resulting scores artificially toward $0$ even in positions that are intuitively sharp. For this reason we adopt the simple sharpness score~\eqref{eq:sharpness} --- effectively “winning chance $+$ losing chance” --- and reserve richer functionals for future work on datasets that contain a broader mix of extremely balanced yet tactically volatile positions.
 \subsection{Error Taxonomy}
 Moves are categorized solely by the magnitude of $\Delta W_t$. Define thresholds
 \begin{equation*}
