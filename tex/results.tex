@@ -14,6 +14,24 @@ Key observations:
   \item \textbf{Standard (Figure~\ref{fig:elo-standard})}: Distinct profile: higher-rated players (Elo >2400) make significantly fewer errors, while lower-rated players continue to exhibit relatively high error rates, producing a more bimodal-like relationship between Elo and error prevalence.
 \end{itemize}
 
+\subsection{Move-level time usage (time\_ratio)}
+The per-move time usage is summarized by the ratio
+\[
+	ext{time\_ratio}_t = \frac{(\text{clock}_{t-1} + \text{increment}) - \text{clock}_t}{\text{clock}_{t-1} + \text{increment}},
+\]
+which measures the fraction of the available clock at move $t$ that was consumed making that move. Values near $0$ indicate very quick moves (including pre-moves or routine, low-effort moves), while values near $1$ indicate that almost the entire available time allotment was used.
+
+Empirically (Figure~\ref{fig:time_ratio}), the proportion of moves classified as errors increases with `time\_ratio` across all fast time controls. Key patterns:
+
+\begin{itemize}
+  \item \textbf{Monotonic increase:} Error proportion rises from low `time\_ratio` (quick moves) up through intermediate values, with a clear upward trend for Bullet and Blitz and a milder slope for Rapid. This suggests that moves made after spending a larger share of available time are, on average, more likely to be errors than very quick, routine moves.
+  \item \textbf{Stronger effect in faster controls:} The steepest increase appears in Bullet and Blitz, consistent with time-pressure amplifying decision noise. Rapid shows a similar shape but lower overall error proportions.
+  \item \textbf{Extreme-value volatility:} At very high `time\_ratio` (close to 1.0) the series becomes noisy, with occasional spikes and abrupt drops. Those features are at least partly sampling noise: very few moves consume essentially the entire allotment in some bins, producing high variance in the empirical proportion.
+  \item \textbf{Interpretation hypotheses:} Low `time\_ratio` often corresponds to low-complexity positions or automatic pattern play (hence low errors). Larger `time\_ratio` can represent either (i) genuinely harder positions requiring long calculation (increasing error risk despite more time), or (ii) extreme time pressure where players are forced to use most of their remaining clock repeatedly and still make mistakes.
+\end{itemize}
+
+For modeling, `time\_ratio` should be included as a non-linear predictor (e.g., spline or low-order polynomial) and interacted with time-control category and Elo. Additionally, control for move phase and position-sharpness metrics to disambiguate whether high `time\_ratio` reflects complexity or time-scramble. Finally, use binning or variance-aware smoothing and report counts per bin to avoid over-interpreting noisy extremes.
+
 \subsection{Piece-Type Error Distribution}
 Figure~\ref{fig:piece-error} reports error composition by moved piece. Knights and Queens show relatively higher severe error proportions compared to Pawns. Hypotheses:
 \begin{itemize}
@@ -29,7 +47,6 @@ Across temporal regimes, cognitive/time resource compression elevates both frequ
 Future work will regress blunder probability against a joint feature set including sharpness metrics and temporal ratios to quantify marginal contributions and interaction effects.
 
 % ---------------- Figures ----------------
-% 2x2 grid for Elo/time-control plots (Bullet, Blitz, Rapid, Standard).
 \begin{figure}[ht]
   \centering
   \begin{subfigure}[b]{0.45\textwidth}
@@ -66,4 +83,27 @@ Future work will regress blunder probability against a joint feature set includi
   \centering
   \includegraphics[width=0.68\textwidth]{../data/images/error_vs_piece.png}
   \caption{Error composition by moved piece type.}\label{fig:piece-error}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{../data/images/error_vs_time_ratio_bullet.png}
+        \caption{Bullet}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{../data/images/error_vs_time_ratio_blitz.png}
+        \caption{Blitz}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{../data/images/error_vs_time_ratio_rapid.png}
+        \caption{Rapid}
+    \end{subfigure}
+    \caption{Proportion of moves classified as errors by `time\_ratio` for Bullet, Blitz, and Rapid time controls.}
+    \label{fig:time_ratio}
 \end{figure}
