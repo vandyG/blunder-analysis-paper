@@ -14,6 +14,17 @@ Key observations:
   \item \textbf{Standard (Figure~\ref{fig:elo-standard})}: Distinct profile: higher-rated players (Elo >2400) make significantly fewer errors, while lower-rated players continue to exhibit relatively high error rates, producing a more bimodal-like relationship between Elo and error prevalence.
 \end{itemize}
 
+
+\subsection{Error Rates as a Function of Sharpness}
+Figure~\ref{fig:error-sharpness} summarizes how the empirical proportion of moves labeled as Inaccuracy, Mistake, or Blunder varies with the sharpness score $S_t = P_t^{\mathrm{win}} + P_t^{\mathrm{loss}}$ defined in Section~\ref{sec:problem_formulation}. Recall that $S_t$ is close to $0$ in positions with essentially no winning chances for either side and approaches $1$ when the engine believes a decisive result is likely for one player.
+
+Across most of the range, higher sharpness is associated with a higher fraction of moves being flagged as errors. All three curves (Inaccuracy, Mistake, Blunder) exhibit an overall upward trend from low $S_t$ toward the mid-to-high range, consistent with the interpretation of sharp positions as ``easy to mess up'' for either side. Positions where both sides still have realistic winning chances---reflected by substantial mass in $P_t^{\mathrm{win}}$ and/or $P_t^{\mathrm{loss}}$---lead to more frequent deviations from engine-best play.
+
+The effect is strongest for inaccuracies: their proportion rises steeply as $S_t$ increases from very low values and peaks around intermediate-to-high sharpness, suggesting that players often make small but non-fatal errors in tactically volatile positions. Mistakes and blunders show a similar but less steep monotone increase, indicating that severe errors also become more common as positions become sharper, though the absolute rates remain lower than for inaccuracies.
+
+At the extreme ends of the sharpness scale the curves drop, but with an important nuance at the low end. All three series exhibit a dip in error proportion around $S_t \approx 0.1$, where positions are low-sharpness and players rarely commit large mistakes. In contrast, the blunder curve spikes very close to $S_t = 0$, suggesting that some moves made in objectively "dead" or trivially equal positions receive almost no attention and are played carelessly, leading to disproportionately many catastrophic errors. The drop near $S_t \approx 1$ is less structural and should be interpreted cautiously. Very sharp, almost-decided positions are rare in the sample, so the corresponding empirical proportions are based on few observations and are sensitive to binning choices; in addition, once a position is nearly winning or losing, many moves may be equally decisive in the engine's view, which can dampen measured error rates despite high nominal sharpness.
+
+
 \subsection{Move-level time usage (time\_ratio)}
 The per-move time usage is summarized by the ratio
 \[
@@ -31,7 +42,6 @@ Empirically (Figure~\ref{fig:time_ratio}), the proportion of moves classified as
 \end{itemize}
 
 For modeling, `time\_ratio` should be included as a non-linear predictor (e.g., spline or low-order polynomial) and interacted with time-control category and Elo. Additionally, control for move phase and position-sharpness metrics to disambiguate whether high `time\_ratio` reflects complexity or time-scramble. Finally, use binning or variance-aware smoothing and report counts per bin to avoid over-interpreting noisy extremes.
-
 \subsection{Piece-Type Error Distribution}
 Figure~\ref{fig:piece-error} reports error composition by moved piece. Knights and Queens show relatively higher severe error proportions compared to Pawns. Hypotheses:
 \begin{itemize}
@@ -79,13 +89,14 @@ Future work will regress blunder probability against a joint feature set includi
   \label{fig:elo-grid}
 \end{figure}
 
-\begin{figure}[ht]
+
+\begin{figure}[h]
   \centering
-  \includegraphics[width=0.68\textwidth]{../data/images/error_vs_piece.png}
-  \caption{Error composition by moved piece type.}\label{fig:piece-error}
+  \includegraphics[width=0.80\textwidth]{../data/images/error_vs_sharpness.png}
+  \caption{Proportion of moves classified as Inaccuracy, Mistake, or Blunder by sharpness score $S_t = P_t^{\mathrm{win}} + P_t^{\mathrm{loss}}$.}\label{fig:error-sharpness}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[h]
     \centering
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
@@ -106,4 +117,11 @@ Future work will regress blunder probability against a joint feature set includi
     \end{subfigure}
     \caption{Proportion of moves classified as errors by `time\_ratio` for Bullet, Blitz, and Rapid time controls.}
     \label{fig:time_ratio}
+\end{figure}
+
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.68\textwidth]{../data/images/error_vs_piece.png}
+  \caption{Error composition by moved piece type.}\label{fig:piece-error}
 \end{figure}
