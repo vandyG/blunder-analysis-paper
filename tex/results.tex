@@ -28,7 +28,7 @@ At the extreme ends of the sharpness scale the curves drop, but with an importan
 \subsection{Move-level time usage (time\_ratio)}
 The per-move time usage is summarized by the ratio
 \[
-	ext{time\_ratio}_t = \frac{(\text{clock}_{t-1} + \text{increment}) - \text{clock}_t}{\text{clock}_{t-1} + \text{increment}},
+	\text{time\_ratio}_t = \frac{(\text{clock}_{t-1} + \text{increment}) - \text{clock}_t}{\text{clock}_{t-1} + \text{increment}},
 \]
 which measures the fraction of the available clock at move $t$ that was consumed making that move. Values near $0$ indicate very quick moves (including pre-moves or routine, low-effort moves), while values near $1$ indicate that almost the entire available time allotment was used.
 

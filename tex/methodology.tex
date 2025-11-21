@@ -51,3 +51,39 @@ From the raw and derived fields we construct analysis-ready features. Typical ch
 \end{itemize}
 
 These raw and derived features are persisted in columnar form so that the final design matrix $X \in \mathbb{R}^{n \times d}$ (with rows ordered by move-event) can be loaded without further parsing. Standard preprocessing used in our experiments comprises within-game standardization of time features, robust scaling of centipawn values, and categorical encoding for non-numeric fields. This construction yields feature sets suitable for least-squares regression, principal component analysis, and classification models, while keeping clear provenance from the original per-move records to the numeric arrays used in the mathematical analyses.
+
+\subsection{Board Position Encoding: FEN to Bitboard Representation}
+\label{sec:fen_encoding}
+While the engine evaluation metrics (centipawn scores, WDL probabilities) provide global assessments of position quality, many of the structural and tactical patterns underlying blunders require direct access to the spatial configuration of pieces on the board. The standard representation for chess positions is the Forsyth-Edwards Notation (FEN), a compact string encoding the placement of all pieces, active side, castling rights, en passant targets, halfmove clock, and fullmove number. For example, the starting position is encoded as:
+\begin{verbatim}
+rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+\end{verbatim}
+where lowercase letters denote black pieces, uppercase letters denote white pieces, digits indicate consecutive empty squares, and slashes separate ranks.
+
+However, FEN strings are not directly amenable to linear algebraic operations or gradient-based learning algorithms. To enable matrix factorization techniques (PCA, SVD) and eventual neural network modeling, we convert each board position into a \emph{bitboard tensor}---a fixed-size binary representation that exposes the spatial structure of the position in a format compatible with standard numerical analysis tools.
+
+\subsubsection{Bitboard Tensor Construction}
+Each chess position is encoded as a $12 \times 8 \times 8$ binary tensor, where the first dimension indexes piece type and color:
+\[
+\mathbf{B} \in \{0,1\}^{12 \times 8 \times 8}.
+\]
+The 12 channels correspond to the six piece types (pawn, knight, bishop, rook, queen, king) for each color (white, black), yielding planes:
+\[
+\{\text{WP, WN, WB, WR, WQ, WK, BP, BN, BB, BR, BQ, BK}\}.
+\]
+For each plane $p$ and square $(i,j)$ with $i,j \in \{0,\ldots,7\}$ (representing rank and file), the entry $\mathbf{B}_{p,i,j}$ is set to 1 if the corresponding piece occupies that square, and 0 otherwise. This representation is standard in modern chess engines and neural network architectures (e.g., AlphaZero~\cite{silver2018general}).
+
+\subsubsection{Flattening for Linear Algebra}
+For compatibility with dimensionality reduction techniques such as PCA and SVD, the $12 \times 8 \times 8$ tensor is flattened into a single 768-dimensional binary vector:
+\[
+\mathbf{b} = \text{vec}(\mathbf{B}) \in \{0,1\}^{768}.
+\]
+This flattening operation concatenates all 12 planes in a fixed order, producing a canonical vectorized representation of the position. Each move in the dataset is thus associated with a feature vector $\mathbf{x}_t \in \mathbb{R}^{d}$ that combines:
+\begin{itemize}
+    \item the 768-dimensional bitboard encoding $\mathbf{b}_t$,
+    \item scalar evaluation and temporal features (centipawn score, clock, time ratio, sharpness),
+    \item categorical encodings (piece moved, opening, time control).
+\end{itemize}
+The full design matrix $X \in \mathbb{R}^{n \times d}$ therefore incorporates both positional structure (via bitboards) and contextual metadata (via derived scalars), enabling joint analysis of spatial patterns and external factors.
+
+Converting FEN strings to bitboard tensors transforms a symbolic, human-readable representation into a numerical format suited for rigorous mathematical analysis. This encoding bridges classical statistical methods (multivariate regression, PCA) and modern machine learning techniques (neural networks, transformers), forming the foundation for all subsequent modeling and interpretation tasks in this research.
