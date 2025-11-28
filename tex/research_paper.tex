@@ -41,6 +41,7 @@
 \usepackage[margin=1in]{geometry} % modest margins for better output layout
 \usepackage{graphicx} % needed for including result figures
 \usepackage{subcaption}
+\usepackage{minted}
 \usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref} % clickable links and PDF metadata
 \hypersetup{
   pdftitle={Chess Blunder Analysis Using Multivariate and Linear Algebraic Approaches},
@@ -92,9 +93,8 @@ This project provides a quantitative analysis of chess blunders using a large Li
 
 \maketitle
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Project Outline}
+\section{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Introduction}
 This project aims to conduct a quantitative investigation into the nature of blunders in the game of chess. Leveraging the large-scale \href{https://database.lichess.org/}{Lichess open database} (casual games, $\approx90$ million games/month) and the \href{https://theweekinchess.com/twic}{TWIC Archive} (official international games, $\approx8100$ games/week), the research will analyze a significant dataset of games to identify the conditions under which players are most likely to make critical errors.
 
 A "blunder" will be defined as a move that causes a substantial negative shift in the game's evaluation, as determined by the powerful Stockfish chess engine. The core of the investigation will be to correlate the occurrence of these blunders with a variety of contextual factors, including:
@@ -111,7 +111,9 @@ The ultimate goal is to move beyond simple blunder identification and develop a 
 \input{problem_formulation}
 \input{methodology}
 \input{results}
+\input{conclusions}
 
+\input{appendix}
 % bibliography (BibTeX)
 {
     \clearpage

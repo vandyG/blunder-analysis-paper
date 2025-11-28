@@ -1,0 +1,38 @@
+% filepath: /home/vandy/Work/MATH6310/blunder-analysis-paper/tex/appendix.tex
+\clearpage
+\appendix
+
+\section{Source Code}
+\label{app:code}
+
+The complete implementation, including PGN parsing, game evaluation, feature engineering, and analysis notebooks, is available in our GitHub repository.\footnote{\url{https://github.com/vandyG/blunder-analysis/tree/master/notebooks}}
+
+\section{Dataset Statistics}
+\label{app:stats}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lr}
+\hline
+\textbf{Metric} & \textbf{Value} \\
+\hline
+Total games & 187575 \\
+Total moves analyzed & 12540813 \\
+Moves with judgements & 2748316 \\
+Blunders & 815201 \\
+Mistakes & 546066 \\
+Inaccuracies & 1387049 \\
+\hline
+Time control distribution: & \\
+\quad Bullet & 38 \% \\
+\quad Blitz & 48 \% \\
+\quad Rapid & 13 \% \\
+\quad Standard & 0.4 \% \\
+\hline
+Elo range & 400--3288 \\
+Mean player Elo & 1707 \\
+\hline
+\end{tabular}
+\caption{Summary statistics of the analyzed dataset.}
+\label{tab:dataset_stats}
+\end{table}
