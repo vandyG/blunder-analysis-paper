@@ -51,21 +51,76 @@ Figure~\ref{fig:piece-error} reports error composition by moved piece. Knights a
   \item \textbf{Rooks/Bishops}: Intermediate; their long-range nature creates both strategic and tactical opportunities but fewer catastrophic single-move losses than queen blunders.
 \end{itemize}
 
-\subsection{Interpretive Summary}
-Across temporal regimes, cognitive/time resource compression elevates both frequency and severity of errors. The steeper error gradient in faster controls suggests that time scarcity interacts multiplicatively with positional complexity. Piece-type analysis reinforces that tactical density (knights) and high-value tempo (queens) amplify blunder risk. Collectively, these findings motivate modeling approaches incorporating (i) dynamic time-pressure features (e.g., remaining clock normalized by increment and move phase), (ii) local tactical complexity proxies (sharpness, contempt variants), and (iii) piece-specific interaction terms.
+\subsection{Principal Component Analysis of Feature Space}
+\label{sec:pca_results}
 
-Future work will regress blunder probability against a joint feature set including sharpness metrics and temporal ratios to quantify marginal contributions and interaction effects.
+To understand the intrinsic dimensionality of the feature space and identify dominant patterns of variation, we applied Incremental PCA (Section~\ref{sec:ipca}) to the standardized feature matrix excluding the target variable \texttt{is\_error}. The analysis used 10 principal components and processed $12,540,813$ move records in batches of 10,000 observations.
+
+\subsubsection{Explained Variance}
+Table~\ref{tab:pca_variance} reports the explained variance ratio for each of the 10 principal components. The first component captures 10.73\% of total variance, the second 8.29\%, and subsequent components capture progressively smaller fractions. The cumulative explained variance reaches approximately 62.3\% after 10 components.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{c|c|c}
+\hline
+\textbf{Component} & \textbf{Variance Ratio} & \textbf{Cumulative Variance} \\
+\hline
+PC1  & 0.1073 & 0.1073 \\
+PC2  & 0.0829 & 0.1902 \\
+PC3  & 0.0755 & 0.2657 \\
+PC4  & 0.0572 & 0.3229 \\
+PC5  & 0.0566 & 0.3795 \\
+PC6  & 0.0550 & 0.4345 \\
+PC7  & 0.0519 & 0.4864 \\
+PC8  & 0.0502 & 0.5365 \\
+PC9  & 0.0435 & 0.5801 \\
+PC10 & 0.0430 & 0.6231 \\
+\hline
+\end{tabular}
+\caption{Explained variance ratios for the first 10 principal components.}
+\label{tab:pca_variance}
+\end{table}
+
+\subsubsection{Interpretation of Low Explained Variance}
+The relatively low individual and cumulative explained variance ratios indicate that the feature space does not exhibit strong low-rank structure. Several factors contribute to this finding:
+
+\begin{itemize}
+    \item \textbf{Feature heterogeneity:} The feature set combines diverse modalities---temporal metrics (\texttt{game\_time}, \texttt{time\_ratio}), evaluation scores (\texttt{cp\_score}, WDL probabilities), categorical encodings (time control, piece type), and player skill (\texttt{player\_elo}). These features capture fundamentally different aspects of the game state and player behavior, and there is no reason to expect them to align along a small number of shared axes.
+    
+    \item \textbf{High intrinsic dimensionality:} Chess positions and move contexts are inherently high-dimensional phenomena. The strategic, tactical, temporal, and psychological factors that determine blunder likelihood operate on distinct, weakly correlated dimensions. Standard PCA seeks linear combinations that maximize variance, but the absence of dominant global directions suggests that blunder patterns are better described by localized, non-linear manifold structure or feature interactions rather than simple linear projections.
+    
+    \item \textbf{Exclusion of positional features:} The 768-dimensional bitboard encoding was excluded from this analysis due to memory constraints (Section~\ref{sec:fen_encoding}). Board structure likely contains rich, compressible spatial patterns (e.g., pawn chains, king safety configurations) that could exhibit stronger low-rank structure. The current analysis is limited to evaluation-derived and metadata features, which are more abstract and less redundant than raw piece placements.
+    
+    \item \textbf{Noise and stochasticity:} Human move choices contain irreducible noise from cognitive limitations, time pressure, and psychological factors. This noise inflates the effective dimensionality and prevents variance from concentrating in a few components.
+\end{itemize}
+
+Despite the modest explained variance, the PCA projection remains useful for several purposes:
+\begin{enumerate}
+    \item \textbf{Decorrelation:} The principal components are orthogonal by construction, eliminating multicollinearity for downstream linear models.
+    \item \textbf{Baseline for comparison:} The low explained variance establishes that simple linear dimensionality reduction is insufficient for this task, motivating more sophisticated approaches such as autoencoders, kernel PCA, or direct supervised feature learning via neural networks.
+\end{enumerate}
+
+\subsubsection{Scatter Plot of First Two Components}
+Figure~\ref{fig:pca_scatter} shows a scatter plot of the first two principal components, with points colored by the binary \texttt{is\_error} label. The two classes (error vs non-error) overlap substantially in the PC1--PC2 plane, confirming that linear projections do not achieve clean separation. This overlap is consistent with the low explained variance and suggests that blunder prediction will require non-linear classifiers or richer feature representations (e.g., convolutional embeddings of board positions) to capture the complex decision boundaries separating errors from correct moves.
+
+% Placeholder for PCA scatter plot figure
+% \begin{figure}[ht]
+%   \centering
+%   \includegraphics[width=0.65\textwidth]{../data/images/pca_scatter.png}
+%   \caption{Scatter plot of first two IPCA components, colored by error class. Substantial overlap indicates that linear projections do not cleanly separate errors from non-errors.}
+%   \label{fig:pca_scatter}
+% \end{figure}
 
 % ---------------- Figures ----------------
 \begin{figure}[ht]
   \centering
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{subfigure}[b]{0.35\textwidth}
     \centering
     \includegraphics[width=\linewidth]{../data/images/error_vs_elo_bullet.png}
     \caption{Bullet}\label{fig:elo-bullet}
   \end{subfigure}
   \hfill
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{subfigure}[b]{0.35\textwidth}
     \centering
     \includegraphics[width=\linewidth]{../data/images/error_vs_elo_blitz.png}
     \caption{Blitz}\label{fig:elo-blitz}
@@ -73,13 +128,13 @@ Future work will regress blunder probability against a joint feature set includi
 
   \vspace{6pt}
 
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{subfigure}[b]{0.35\textwidth}
     \centering
     \includegraphics[width=\linewidth]{../data/images/error_vs_elo_rapid.png}
     \caption{Rapid}\label{fig:elo-rapid}
   \end{subfigure}
   \hfill
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{subfigure}[b]{0.35\textwidth}
     \centering
     \includegraphics[width=\linewidth]{../data/images/errors_vs_elo_standard.png}
     \caption{Standard}\label{fig:elo-standard}
@@ -87,13 +142,6 @@ Future work will regress blunder probability against a joint feature set includi
 
   \caption{Elo-binned error proportions by time control: Bullet, Blitz, Rapid, and Standard.}
   \label{fig:elo-grid}
-\end{figure}
-
-
-\begin{figure}[h]
-  \centering
-  \includegraphics[width=0.80\textwidth]{../data/images/error_vs_sharpness.png}
-  \caption{Proportion of moves classified as Inaccuracy, Mistake, or Blunder by sharpness score $S_t = P_t^{\mathrm{win}} + P_t^{\mathrm{loss}}$.}\label{fig:error-sharpness}
 \end{figure}
 
 \begin{figure}[h]
@@ -119,9 +167,23 @@ Future work will regress blunder probability against a joint feature set includi
     \label{fig:time_ratio}
 \end{figure}
 
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.80\textwidth]{../data/images/error_vs_sharpness.png}
+  \caption{Proportion of moves classified as Inaccuracy, Mistake, or Blunder by sharpness score $S_t = P_t^{\mathrm{win}} + P_t^{\mathrm{loss}}$.}\label{fig:error-sharpness}
+\end{figure}
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=0.68\textwidth]{../data/images/error_vs_piece.png}
   \caption{Error composition by moved piece type.}\label{fig:piece-error}
 \end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.68\textwidth]{../data/images/pca.png}
+  \caption{Principal Component Analysis.}\label{fig:pca_scatter}
+\end{figure}
+
+\clearpage
+
