@@ -50,7 +50,40 @@ From the raw and derived fields we construct analysis-ready features. Typical ch
     \item Rating-based controls: the rating differential $\Delta\mathrm{Elo}$ and raw player ratings.
 \end{itemize}
 
-These raw and derived features are persisted in columnar form so that the final design matrix $X \in \mathbb{R}^{n \times d}$ (with rows ordered by move-event) can be loaded without further parsing. Standard preprocessing used in our experiments comprises within-game standardization of time features, robust scaling of centipawn values, and categorical encoding for non-numeric fields. This construction yields feature sets suitable for least-squares regression, principal component analysis, and classification models, while keeping clear provenance from the original per-move records to the numeric arrays used in the mathematical analyses.
+These raw and derived features are persisted in columnar form so that the final design matrix $X \in \mathbb{R}^{n \times d}$ (with rows ordered by move-event) can be loaded without further parsing. 
+
+\subsubsection{Feature Preprocessing and Transformations}
+Before applying dimensionality reduction and modeling techniques, several preprocessing transformations are applied to the raw feature set:
+
+\begin{enumerate}
+    \item \textbf{Categorical encoding:} Boolean features (\texttt{is\_check}) are cast to integer type (0/1). Categorical features \texttt{time\_control\_type} and \texttt{piece\_type} are one-hot encoded, producing binary indicator columns for each category value. The \texttt{UNKNOWN} category is dropped as it provides no discriminative information.
+    
+    \item \textbf{Target variable construction:} The response variable \texttt{is\_error} is created as a binary indicator:
+    \[
+    \texttt{is\_error}_t = \mathbf{1}[\texttt{judgement}_t \in \{\text{Blunder}, \text{Mistake}, \text{Inaccuracy}\}],
+    \]
+    with null judgements (moves with no evaluation delta) mapped to 0 (no error).
+    
+    \item \textbf{Evaluation score scaling:} The centipawn score \texttt{cp\_score} exhibits extreme values in mate positions (set to large sentinels such as $\pm10000$). To prevent these outliers from dominating distance-based analyses, we apply a bounded transformation:
+    \[
+    \texttt{cp\_score}_{\text{scaled}} = 
+    \begin{cases}
+    \tanh\left(\frac{\texttt{cp\_score}}{2019}\right) \cdot 0.99 & \text{if } \texttt{mate\_in} = 0, \\
+    \text{sign}(\texttt{cp\_score}) & \text{if } \texttt{mate\_in} \neq 0.
+    \end{cases}
+    \]
+    The hyperbolic tangent squashes non-mate evaluations into the interval $(-0.99, 0.99)$, preserving order while bounding magnitude. Positions with forced mate are mapped to $\pm1$ to mark them as decisively winning or losing without introducing unbounded variance. The divisor 2019 was chosen empirically to yield smooth compression across typical centipawn ranges.
+    
+    \item \textbf{Missing value imputation:} Infinite values in \texttt{mate\_in} (indicating no forced mate) are replaced with null, then filled with 0. Similarly, any remaining null values in \texttt{time\_ratio} are set to 0, representing moves with no recorded time consumption.
+    
+    \item \textbf{Standardization:} Each numeric feature column $f$ (excluding the binary target \texttt{is\_error}) is z-score standardized:
+    \[
+    f_{\text{std}} = \frac{f - \mu_f}{\sigma_f},
+    \]
+    where $\mu_f$ and $\sigma_f$ are the mean and standard deviation computed over all moves. This transformation centers each feature at zero and scales to unit variance, ensuring that features with different native ranges (e.g., \texttt{player\_elo} in $[1000, 3000]$ versus \texttt{time\_ratio} in $[0,1]$) contribute comparably to subsequent linear algebraic operations such as PCA.
+\end{enumerate}
+
+This preprocessing pipeline produces a standardized, numeric-only feature matrix suitable for least-squares regression, principal component analysis, and classification models, while maintaining clear provenance from the original per-move records to the numeric arrays used in the mathematical analyses.
 
 \subsection{Board Position Encoding: FEN to Bitboard Representation}
 \label{sec:fen_encoding}
@@ -87,3 +120,27 @@ This flattening operation concatenates all 12 planes in a fixed order, producing
 The full design matrix $X \in \mathbb{R}^{n \times d}$ therefore incorporates both positional structure (via bitboards) and contextual metadata (via derived scalars), enabling joint analysis of spatial patterns and external factors.
 
 Converting FEN strings to bitboard tensors transforms a symbolic, human-readable representation into a numerical format suited for rigorous mathematical analysis. This encoding bridges classical statistical methods (multivariate regression, PCA) and modern machine learning techniques (neural networks, transformers), forming the foundation for all subsequent modeling and interpretation tasks in this research.
+
+\textbf{Note on dimensionality constraints:} The 768-dimensional bitboard encoding $\mathbf{b}_t$ was excluded from the initial PCA experiments reported in Section~\ref{sec:results} due to memory limitations. The full dataset (approximately $10^8$ move records) combined with high-dimensional spatial features exceeds available RAM for batch matrix operations. Future work will address this constraint through: (i) streaming PCA implementations that process mini-batches sequentially without materializing the full covariance matrix~\cite{IncrementalPCA2019}, (ii) sparse representations that exploit the typical occupancy of $\approx32$ squares per position, or (iii) convolutional autoencoders pretrained on position embeddings to reduce the spatial feature dimension before joint PCA. The analyses in this paper focus on the lower-dimensional evaluation, temporal, and categorical features, which remain highly informative for blunder prediction while fitting comfortably in memory.
+
+\subsection{Dimensionality Reduction via Incremental PCA}
+\label{sec:ipca}
+
+Principal Component Analysis (PCA) is a fundamental tool for identifying directions of maximum variance in high-dimensional data and for reducing feature dimensionality while retaining explanatory power. Standard batch PCA requires constructing the full covariance matrix $C = \frac{1}{n}X^T X$ where $X \in \mathbb{R}^{n \times d}$ is the centered data matrix, then computing its eigendecomposition. For our datasets, this computation exceeds available memory.
+
+To address this constraint, we employ \emph{Incremental PCA} (IPCA)~\cite{IncrementalPCA2019}, an online algorithm that processes the data in sequential mini-batches and updates the principal component estimates incrementally. The IPCA algorithm maintains a running estimate of the covariance matrix and its eigendecomposition without requiring the entire dataset to reside in memory simultaneously. Formally, IPCA is equivalent to batch PCA in the sense that given the same dataset, the final transformation coefficients are identical; the difference lies solely in the computational strategy.
+
+\subsubsection{Implementation Details}
+In our experiments we selected $k = 10$ principal components and processed batches of 10,000 move records at a time. The features included in the analysis comprised:
+\begin{itemize}
+    \item Temporal features: \texttt{game\_time}, \texttt{increment}, \texttt{time\_ratio}.
+    \item Evaluation features: scaled \texttt{cp\_score}, \texttt{winning\_chance}, \texttt{drawing\_chance}, \texttt{losing\_chance}, \texttt{eval\_delta}.
+    \item Positional context: \texttt{turn}, \texttt{is\_check}, \texttt{mate\_in}.
+    \item Player skill: \texttt{player\_elo}.
+    \item One-hot encoded categories: time control types (Blitz, Bullet, Rapid, Standard, Unlimited) and piece types (Pawn, Knight, Bishop, Rook, Queen, King).
+\end{itemize}
+After preprocessing, standardization, and one-hot expansion, the feature dimension was $d = 23$.
+
+The target variable \texttt{is\_error} was excluded from the PCA fitting but retained alongside the projected features for subsequent supervised modeling. This separation ensures that the principal components reflect the intrinsic structure of the input features without contamination from the response variable.
+
+The use of IPCA enables scalable analysis of datasets that far exceed available memory, making it feasible to extract low-dimensional representations from massive corpora while maintaining mathematical equivalence to classical batch PCA. The resulting principal components serve as input features for downstream regression and classification models aimed at blunder prediction.
