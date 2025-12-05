@@ -6,6 +6,39 @@ This section presents empirical findings from the processed Lichess sample. Unle
 \subsection{Error Rates Across Elo and Time Controls}
 Error prevalence generally declines with increasing Elo across time controls (Figures~\ref{fig:elo-blitz}--\ref{fig:elo-standard}), but the pattern of decline depends strongly on rating strata and time control. The steepest slope of decline occurs among the very highest-rated players (Elo $>2600$), who show marked reductions in error rates relative to slightly lower tiers. Longer time formats (Rapid and Standard) exhibit a larger decline in errors across Elo than Bullet; Bullet still shows a noticeable improvement for the top ($>2600$) players but the gradient is less pronounced than in longer formats.
 
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.35\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{../data/images/error_vs_elo_bullet.png}
+    \caption{Bullet}\label{fig:elo-bullet}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.35\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{../data/images/error_vs_elo_blitz.png}
+    \caption{Blitz}\label{fig:elo-blitz}
+  \end{subfigure}
+
+  \vspace{6pt}
+
+  \begin{subfigure}[b]{0.35\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{../data/images/error_vs_elo_rapid.png}
+    \caption{Rapid}\label{fig:elo-rapid}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.35\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{../data/images/errors_vs_elo_standard.png}
+    \caption{Standard}\label{fig:elo-standard}
+  \end{subfigure}
+
+  \caption{Elo-binned error proportions by time control: Bullet, Blitz, Rapid, and Standard.}
+  \label{fig:elo-grid}
+\end{figure}
+
+
 Key observations:
 \begin{itemize}
   \item \textbf{Bullet (Figure~\ref{fig:elo-bullet})}: Error proportions are elevated at lower Elo and improve with rating, suggesting pattern recognition and practical skills partially compensate for extreme time pressure.
@@ -17,6 +50,12 @@ Key observations:
 
 \subsection{Error Rates as a Function of Sharpness}
 Figure~\ref{fig:error-sharpness} summarizes how the empirical proportion of moves labeled as Inaccuracy, Mistake, or Blunder varies with the sharpness score $S_t = P_t^{\mathrm{win}} + P_t^{\mathrm{loss}}$ defined in Section~\ref{sec:problem_formulation}. Recall that $S_t$ is close to $0$ in positions with essentially no winning chances for either side and approaches $1$ when the engine believes a decisive result is likely for one player.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.80\textwidth]{../data/images/error_vs_sharpness.png}
+  \caption{Proportion of moves classified as Inaccuracy, Mistake, or Blunder by sharpness score $S_t = P_t^{\mathrm{win}} + P_t^{\mathrm{loss}}$.}\label{fig:error-sharpness}
+\end{figure}
 
 Across most of the range, higher sharpness is associated with a higher fraction of moves being flagged as errors. All three curves (Inaccuracy, Mistake, Blunder) exhibit an overall upward trend from low $S_t$ toward the mid-to-high range, consistent with the interpretation of sharp positions as ``easy to mess up'' for either side. Positions where both sides still have realistic winning chances---reflected by substantial mass in $P_t^{\mathrm{win}}$ and/or $P_t^{\mathrm{loss}}$---lead to more frequent deviations from engine-best play.
 
@@ -34,6 +73,29 @@ which measures the fraction of the available clock at move $t$ that was consumed
 
 Empirically (Figure~\ref{fig:time_ratio}), the proportion of moves classified as errors increases with `time\_ratio` across all fast time controls. Key patterns:
 
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{../data/images/error_vs_time_ratio_bullet.png}
+        \caption{Bullet}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{../data/images/error_vs_time_ratio_blitz.png}
+        \caption{Blitz}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{../data/images/error_vs_time_ratio_rapid.png}
+        \caption{Rapid}
+    \end{subfigure}
+    \caption{Proportion of moves classified as errors by `time\_ratio` for Bullet, Blitz, and Rapid time controls.}
+    \label{fig:time_ratio}
+\end{figure}
+
 \begin{itemize}
   \item \textbf{Monotonic increase:} Error proportion rises from low `time\_ratio` (quick moves) up through intermediate values, with a clear upward trend for Bullet and Blitz and a milder slope for Rapid. This suggests that moves made after spending a larger share of available time are, on average, more likely to be errors than very quick, routine moves.
   \item \textbf{Stronger effect in faster controls:} The steepest increase appears in Bullet and Blitz, consistent with time-pressure amplifying decision noise. Rapid shows a similar shape but lower overall error proportions.
@@ -50,6 +112,12 @@ Figure~\ref{fig:piece-error} reports error composition by moved piece. Knights a
   \item \textbf{Pawns}: Majority of pawn moves produce incremental positional shifts, hence lower severe error proportion; inaccuracies dominate rather than blunders.
   \item \textbf{Rooks/Bishops}: Intermediate; their long-range nature creates both strategic and tactical opportunities but fewer catastrophic single-move losses than queen blunders.
 \end{itemize}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.68\textwidth]{../data/images/error_vs_piece.png}
+  \caption{Error composition by moved piece type.}\label{fig:piece-error}
+\end{figure}
 
 \subsection{Principal Component Analysis of Feature Space}
 \label{sec:pca_results}
@@ -102,82 +170,6 @@ Despite the modest explained variance, the PCA projection remains useful for sev
 
 \subsubsection{Scatter Plot of First Two Components}
 Figure~\ref{fig:pca_scatter} shows a scatter plot of the first two principal components, with points colored by the binary \texttt{is\_error} label. The two classes (error vs non-error) overlap substantially in the PC1--PC2 plane, confirming that linear projections do not achieve clean separation. This overlap is consistent with the low explained variance and suggests that blunder prediction will require non-linear classifiers or richer feature representations (e.g., convolutional embeddings of board positions) to capture the complex decision boundaries separating errors from correct moves.
-
-% Placeholder for PCA scatter plot figure
-% \begin{figure}[ht]
-%   \centering
-%   \includegraphics[width=0.65\textwidth]{../data/images/pca_scatter.png}
-%   \caption{Scatter plot of first two IPCA components, colored by error class. Substantial overlap indicates that linear projections do not cleanly separate errors from non-errors.}
-%   \label{fig:pca_scatter}
-% \end{figure}
-
-% ---------------- Figures ----------------
-\begin{figure}[ht]
-  \centering
-  \begin{subfigure}[b]{0.35\textwidth}
-    \centering
-    \includegraphics[width=\linewidth]{../data/images/error_vs_elo_bullet.png}
-    \caption{Bullet}\label{fig:elo-bullet}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.35\textwidth}
-    \centering
-    \includegraphics[width=\linewidth]{../data/images/error_vs_elo_blitz.png}
-    \caption{Blitz}\label{fig:elo-blitz}
-  \end{subfigure}
-
-  \vspace{6pt}
-
-  \begin{subfigure}[b]{0.35\textwidth}
-    \centering
-    \includegraphics[width=\linewidth]{../data/images/error_vs_elo_rapid.png}
-    \caption{Rapid}\label{fig:elo-rapid}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.35\textwidth}
-    \centering
-    \includegraphics[width=\linewidth]{../data/images/errors_vs_elo_standard.png}
-    \caption{Standard}\label{fig:elo-standard}
-  \end{subfigure}
-
-  \caption{Elo-binned error proportions by time control: Bullet, Blitz, Rapid, and Standard.}
-  \label{fig:elo-grid}
-\end{figure}
-
-\begin{figure}[h]
-    \centering
-    \begin{subfigure}[b]{0.3\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{../data/images/error_vs_time_ratio_bullet.png}
-        \caption{Bullet}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.3\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{../data/images/error_vs_time_ratio_blitz.png}
-        \caption{Blitz}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.3\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{../data/images/error_vs_time_ratio_rapid.png}
-        \caption{Rapid}
-    \end{subfigure}
-    \caption{Proportion of moves classified as errors by `time\_ratio` for Bullet, Blitz, and Rapid time controls.}
-    \label{fig:time_ratio}
-\end{figure}
-
-\begin{figure}[h]
-  \centering
-  \includegraphics[width=0.80\textwidth]{../data/images/error_vs_sharpness.png}
-  \caption{Proportion of moves classified as Inaccuracy, Mistake, or Blunder by sharpness score $S_t = P_t^{\mathrm{win}} + P_t^{\mathrm{loss}}$.}\label{fig:error-sharpness}
-\end{figure}
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=0.68\textwidth]{../data/images/error_vs_piece.png}
-  \caption{Error composition by moved piece type.}\label{fig:piece-error}
-\end{figure}
 
 \begin{figure}[ht]
   \centering
