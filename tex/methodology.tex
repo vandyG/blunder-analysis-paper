@@ -126,7 +126,7 @@ Converting FEN strings to bitboard tensors transforms a symbolic, human-readable
 \subsection{Dimensionality Reduction via Incremental PCA}
 \label{sec:ipca}
 
-Principal Component Analysis (PCA) is a fundamental tool for identifying directions of maximum variance in high-dimensional data and for reducing feature dimensionality while retaining explanatory power. Standard batch PCA requires constructing the full covariance matrix $C = \frac{1}{n}X^T X$ where $X \in \mathbb{R}^{n \times d}$ is the centered data matrix, then computing its eigendecomposition. For our datasets, this computation exceeds available memory.
+Principal Component Analysis (PCA) is a fundamental tool for identifying directions of maximum variance in high-dimensional data and for reducing feature dimensionality while retaining explanatory power. However, standard implementations require the full data matrix $X \in \mathbb{R}^{n \times d}$ to be loaded into memory. For our datasets, the size of $X$ exceeds available memory.
 
 To address this constraint, we employ \emph{Incremental PCA} (IPCA)~\cite{IncrementalPCA2019}, an online algorithm that processes the data in sequential mini-batches and updates the principal component estimates incrementally. The IPCA algorithm maintains a running estimate of the covariance matrix and its eigendecomposition without requiring the entire dataset to reside in memory simultaneously. Formally, IPCA is equivalent to batch PCA in the sense that given the same dataset, the final transformation coefficients are identical; the difference lies solely in the computational strategy.
 
