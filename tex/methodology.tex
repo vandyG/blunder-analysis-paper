@@ -18,9 +18,9 @@ Let \(x_t \in \mathbb{R}^d\) denote the feature vector extracted for move \(t\).
 
     \item \textbf{Move context:} \texttt{turn} (which side moves), \texttt{move} (SAN move string), and \texttt{fullmove\_number} give the ply context required for sequential analyses.
 
-    \item \textbf{Engine-based evaluations:}
+    \item \textbf{Engine-based evaluations:}\label{sub:engine_eval}
         \begin{itemize}
-            \item \texttt{cp\_score}: a centipawn-style score (White-perspective). Mate scores are converted to large numeric sentinels so the field remains numeric for vectorized pipelines.
+            \item \texttt{cp\_score}: a centipawn-style score (White-perspective). Mate scores are converted to large numeric constants so the field remains numeric for vectorized pipelines.
             \item \texttt{winning\_chance}, \texttt{drawing\_chance}, \texttt{losing\_chance}: probability estimates derived from the engine's WDL output (in \([0,1]\)).
             \item \texttt{mate\_in}: mate distance when applicable; otherwise set to $+\infty$.
             \item \texttt{sharpness}: a scalar derived from WDL probabilities that quantifies how easy the position is to ``mess up'' for either player, defined as $S_t = P_t^{\mathrm{win}} + P_t^{\mathrm{loss}}$ as in Section~\ref{sec:problem_formulation}.
@@ -41,7 +41,7 @@ From the raw and derived fields we construct analysis-ready features. Typical ch
 
 \begin{itemize}
     \item Intercept: a constant 1 to absorb baseline effects in linear models.
-    \item Evaluation features: \texttt{cp\_score} and \(\Delta\mathrm{eval}_t\), optionally winsorized to limit the influence of mate sentinels.
+    \item Evaluation features: \texttt{cp\_score} and \(\Delta\mathrm{eval}_t\), optionally winsorized to limit the influence of extreme mate constants (See Section~\ref{sub:engine_eval}).
     \item Probabilistic features: \texttt{winning\_chance}, \texttt{drawing\_chance}, and \texttt{losing\_chance} (optionally transformed via log-odds for linear models), together with the sharpness score $S_t = P_t^{\mathrm{win}} + P_t^{\mathrm{loss}}$.
     \item Mate indicators: binary indicator $\mathbf{1}[\texttt{mate\_in} < \infty]$ and the mate distance when present.
     \item Temporal features: standardized remaining clock (within-game z-score), the normalized time-ratio described above, and an indicator or ordinal encoding of time-control category.
@@ -63,7 +63,7 @@ Before applying dimensionality reduction and modeling techniques, several prepro
     \]
     with null judgements (moves with no evaluation delta) mapped to 0 (no error).
     
-    \item \textbf{Evaluation score scaling:} The centipawn score \texttt{cp\_score} exhibits extreme values in mate positions (set to large sentinels such as $\pm10000$). To prevent these outliers from dominating distance-based analyses, we apply a bounded transformation:
+    \item \textbf{Evaluation score scaling:} The centipawn score \texttt{cp\_score} exhibits extreme values in mate positions (set to large numeric constants such as $\pm10000$). To prevent these outliers from dominating distance-based analyses, we apply a bounded transformation:
     \[
     \texttt{cp\_score}_{\text{scaled}} = 
     \begin{cases}
