@@ -10,8 +10,7 @@ Let \(x_t \in \mathbb{R}^d\) denote the feature vector extracted for move \(t\).
 \begin{itemize}
     \item \textbf{Identifiers and provenance:} the fields \texttt{game\_id}, \texttt{offset}, and \texttt{site} uniquely identify the game and the byte position within the original archive. These fields enable reproducible joins and deterministic partitioning of the corpus.
 
-    \item \textbf{Player ratings:} the player's Elo values are recorded as integer fields for White and Black. The reported rating changes are stored separately. A simple derived scalar is the rating differential
-        \[\Delta\mathrm{Elo} = \texttt{white\_elo} - \texttt{black\_elo}.\]
+    \item \textbf{Player ratings:} the player's Elo values are recorded as integer fields for White and Black. The reported rating changes are stored separately.
 
     \item \textbf{Opening and game descriptors:} \texttt{eco} is the ECO opening code; \texttt{time\_control}, \texttt{game\_time}, and \texttt{increment} encode the time-control category and parameters. The categorical time-control is used to group and standardize temporal features.
 
