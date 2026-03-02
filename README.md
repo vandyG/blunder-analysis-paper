@@ -5,6 +5,8 @@ This directory contains the LaTeX sources for the paper:
 > **Chess Blunder Analysis Using Multivariate and Linear Algebraic Approaches**  
 > Vandit Goel — University of Texas at Arlington
 
+**Presentation:** https://vandyg.github.io/blunder-analysis-paper/
+
 ## Overview
 
 This paper investigates the quantitative structure of chess blunders using large-scale game data from Lichess, Stockfish NNUE evaluations, and linear algebraic methods. Errors are defined via a winning-chance delta threshold: a move is a *Blunder* if it drops winning probability by ≥30%, a *Mistake* by ≥20%, and an *Inaccuracy* by ≥10%. Position sharpness is measured as $S_t = P_t^{\mathrm{win}} + P_t^{\mathrm{loss}}$ from the engine's WDL output.
