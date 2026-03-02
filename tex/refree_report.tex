@@ -1,0 +1,76 @@
+\documentclass{amsart}
+\usepackage{enumitem} % added to allow custom enumerate labels
+\usepackage{color} % kept minimal; xcolor not needed for the table
+% Commented out microtype due to a known \showhyphens compatibility issue; re-enable if you update microtype/LaTeX
+% \usepackage{microtype} % improves justification and typography
+\usepackage[margin=1in]{geometry} % modest margins for better output layout
+\usepackage{graphicx} % needed for including result figures
+\usepackage{subcaption}
+\usepackage{minted}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref} % clickable links and PDF metadata
+\hypersetup{
+  pdftitle={Chess Blunder Analysis Using Multivariate and Linear Algebraic Approaches},
+  pdfauthor={Vandit Goel},
+  pdfkeywords={chess, blunder, Stockfish, machine learning, multivariate analysis}
+}
+\setlist[enumerate]{label=\arabic*., leftmargin=*, itemsep=4pt} % global numeric "1." style
+
+% increase paragraph vertical spacing (adjust the 8pt value as needed)
+\setlength{\parskip}{8pt plus 2pt minus 1pt}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{xca}[theorem]{Exercise}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\numberwithin{equation}{section}
+
+\begin{document}
+    \title{Chess Blunder Analysis Using Multivariate and Linear Algebraic Approaches}
+
+    %    Remove any unused author tags.
+    %    author one information
+    \author{Vandit Goel}
+    \address{University of Texas at Arlington, 701 S. Nedderman Dr., Arlington, TX 76019}
+    \curraddr{}
+    \email{vxg5699@mavs.uta.edu}
+    \thanks{}
+
+    \maketitle
+
+    \section{Summary and Overall Impression}
+        This paper analyzes an open source chess dataset and tries to determine what factors result in blunders (serious errors) in the game. A significant amount of preprocessing and data curation is done, and then PCA and other basic statistical analysis is done to understand the effect of different parameters on the rate of errors in the game.
+        
+        The paper is quite well written. The feature engineering and data preprocessing stage is done well and is substantial as required for a dataset of this size and complexity. I believe the author did a good job of this stage, and made solid decisions in how to use or not use various features given the time ane resource constraints. The experiments are relatively basic, but the conclusions made from them are good. I have only a few small suggestions for improving the paper in the revision.
+
+    \section{Technical Content}
+        \begin{enumerate}[label={(\arabic*)}]
+            \item  Section 3.4: It is not true that PCA \textit{requires} computing the covariance matrix completely. Recall in lecture that we discussed that one can compute the SVD of the data matrix $X$ instead and derive the principal components from this. This reduces the complexity in this case from $O(n^3)$ to $O(nd^2)$ which is significant. It still may be that one would have to do it in batches in this data because of how large n is, but nonetheless the batches could be larger.
+
+            {\color{gray}\small Thank you -- this has now been fixed in Section~3.4. Principal components may indeed be computed via the SVD of the centered data matrix; for our extremely large $n$ and streaming I/O constraints we used IPCA to process mini-batches without materializing the full data matrix.}
+            
+            \item Unless I misunderstand the experiments, I do not see an experiment looking at the effect of $\Delta ELO$. I think this would be of interest if something like Figure 1 was presented for this as the $x$-axis.
+            
+            {\color{gray}\small Thank you for the suggestion -- $\Delta ELO$ was purposefully omitted from the experiment. Upon analysis, it was found that $\Delta ELO$ was only concentrated around $\pm 200$. This was due the way matchmaking works in online chess platforms like Lichess, where players are paired with opponents of similar skill levels to ensure fair and competitive games. As a result, the dataset did not contain a wide enough range of $\Delta ELO$ values to draw meaningful conclusions about its effect on blunder rates. Including this limited range in the analysis could have led to misleading interpretations, so it was excluded from the final experiments. To avoid confusion, the mention of this feature has now been removed from Section~3.2.}
+        \end{enumerate}
+
+        \section{WRITING}
+        \begin{enumerate}[label={(\arabic*)}]
+            \item  Is the term ”sentinels” in Section 3.2.1 common? I have not heard this term before in this context.
+
+            {\color{gray}\small Yes, the use of term "sentinels" is quite common in chess programming and analysis. The CP score of $\pm 10,000$ is often used as a dummy placeholder value to indicate checkmate or forced mate scenarios in chess engines and analysis tools. This convention helps to clearly distinguish between normal evaluation scores and those that represent decisive outcomes. To improve clarity, the use of the term "sentinels" has now been removed from Section~3.2.1.}
+
+            \item It would be much better if the figures were placed near the text describing them. Additionally, figures should appear in order of when they are first referenced, but currently Figure 3 is referenced before Figure 2, but they appear in the opposite order.
+            
+            {\color{gray}\small Thank you for the suggestion -- the figures have now been rearranged to appear in order of first reference, and placed closer to the relevant text where possible.}
+        \end{enumerate}
+
+
+\end{document}
